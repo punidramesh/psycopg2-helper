@@ -5,55 +5,65 @@ import sys
 
 config = {}
 
+# Helper functions to print texts in different colors
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) 
+def prGreen(skk): print("\033[92m {}\033[00m" .format(skk))
+def prCyan(skk): print("\033[96m {}\033[00m" .format(skk)) 
+
+# Function to get database connection details 
 def getDbData():
     try : 
-        
-        print("Enter host name or press ENTER for localhost : ")
+        prCyan("Enter host name or press ENTER for localhost : ")
         config['host'] = input()
         if config['host'] == "": config['host'] = "localhost"
-        print("Enter port number or press ENTER for using port '5432' : ")
+        prCyan("Enter port number or press ENTER for using port '5432' : ")
         config['port'] = input()
         if config['port'] == "": config['port'] = "5432"
-        print("Enter database name : ")
+        prCyan("Enter database name : ")
         config['database'] = input()
-        print("Enter user name : ")
+        prCyan("Enter user name : ")
         config['user'] = input()
-        print("Enter password : ")
+        prCyan("Enter password : ")
         config['password'] = input()
 
     except:
-        print("Error while receiving data, press ENTER to try again or 'quit' for exiting")
+        prRed("Error while receiving data, press ENTER to try again or 'quit' for exiting")
         inp = input()
         if inp == "":
             getDbData()
         elif inp == "quit" or inp == "QUIT" or inp == "Quit":
-            print("Exiting.....")
+            prRed("Exiting.....")
             sys.exit(0)
-
+ 
+# Function to get user query
 def getQuery():
-    print("Enter the SQL query : ")
+    prCyan("Enter the SQL query : ")
     query = str(input())
-    if isinstance(query, str):
-        print("Fault in entered query, press ENTER to try again or 'quit' for exiting")
+    if type(query) != str:
+        prRed("Fault in entered query, press ENTER to try again or 'quit' for exiting")
         inp = input()
         if inp == "":
             getQuery()
         elif inp == "quit" or inp == "QUIT" or inp == "Quit":
-            print("Exiting.....")
+            prRed("Exiting.....")
             sys.exit(0)
+    else:
+        return query
 
-def executeQuery(query,conn):
+# Function to execute user query 
+def executeQuery(query,cursor):
     try:
-        output = conn.execute(query)
-        print("Successfully executed query")
+        prGreen("Executing query......")
+        output = cursor.execute(query)
+        prGreen("Successfully executed query......")
         return output
     except psycopg2.InterfaceError as exc:
-        print("Unable to connect to database")
-        print (exc.message)
+        prRed("Unable to execute query")
+        prRed (exc.message)
 
-
+# Function to connect to the database
 def connect():
-    print("Attempting to connect to the database....")
+    prGreen("Attempting to connect to the database....")
     try:
         # Open connection to database 
         conn = psycopg2.connect(
@@ -66,12 +76,12 @@ def connect():
         conn.set_session(autocommit=True)
         # Defining a Cursor
         cursor = conn.cursor()
-        print("Connected to database")
-        print("Executing Query")
-        executeQuery(getQuery())
+        prGreen("Connected to database")
+        prGreen("Executing Query")
+        print(executeQuery(getQuery(),cursor))
     except psycopg2.InterfaceError as exc:
-        print("Unable to connect to database")
-        print (exc.message)
+        prRed("Unable to connect to database")
+        prRed (exc.message)
         conn = psycopg2.connect(
                         host = config['host'],
                         port = config['port'],
@@ -80,10 +90,9 @@ def connect():
                         password = config['password'])
         cursor = conn.cursor()   
 
+# Driver function
 def main():
     getDbData()
-    getQuery()
     connect()
-    executeQuery() 
 
 main()
